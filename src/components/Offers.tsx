@@ -1,0 +1,139 @@
+import { useState, useEffect } from 'react';
+import { db, handleFirestoreError, OperationType } from '../firebase';
+import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
+import { motion, AnimatePresence } from 'motion/react';
+import { Gift, Tag, Clock, ArrowRight, Sparkles } from 'lucide-react';
+
+interface Offer {
+  id: string;
+  title: string;
+  description: string;
+  discount: string;
+  imageUrl: string;
+  isActive: boolean;
+}
+
+export default function Offers() {
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const q = query(
+      collection(db, 'offers'),
+      where('isActive', '==', true),
+      orderBy('createdAt', 'desc')
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setOffers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Offer)));
+      setLoading(false);
+    }, (err) => handleFirestoreError(err, OperationType.LIST, 'offers'));
+
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="pt-32 pb-20 min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto space-y-12">
+        <div className="text-center space-y-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-sm font-bold shadow-sm border border-emerald-200"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Limited Time Deals</span>
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl lg:text-6xl font-extrabold text-gray-900 tracking-tight"
+          >
+            Exclusive <span className="text-emerald-600 font-black">Offers</span>
+          </motion.h1>
+          <p className="text-gray-500 max-w-2xl mx-auto text-lg leading-relaxed">
+            Grab our special deals and enjoy your favorite food and juices at unbeatable prices.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8">
+          <AnimatePresence mode="popLayout">
+            {offers.map((offer) => (
+              <motion.div
+                key={offer.id}
+                layout
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="group relative bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all border border-gray-100 flex flex-col sm:flex-row h-full"
+              >
+                <div className="relative sm:w-1/2 h-64 sm:h-auto overflow-hidden">
+                  {offer.imageUrl ? (
+                    <img
+                      src={offer.imageUrl}
+                      alt={offer.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-emerald-50 flex items-center justify-center">
+                      <Gift className="w-16 h-16 text-emerald-200" />
+                    </div>
+                  )}
+                  <div className="absolute top-4 left-4">
+                    <div className="px-4 py-2 bg-emerald-600 text-white rounded-2xl font-black text-xl shadow-lg shadow-emerald-200/50">
+                      {offer.discount}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-8 sm:w-1/2 flex flex-col justify-between space-y-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm uppercase tracking-widest">
+                      <Tag className="w-4 h-4" />
+                      Limited Offer
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 leading-tight group-hover:text-emerald-600 transition-colors">
+                      {offer.title}
+                    </h3>
+                    <p className="text-gray-500 text-sm leading-relaxed">
+                      {offer.description || 'Enjoy this exclusive deal on our premium menu items. Valid for a limited time only.'}
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-gray-400 text-xs font-medium">
+                      <Clock className="w-4 h-4" />
+                      Valid until supplies last
+                    </div>
+                    <button className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 group/btn">
+                      Claim Offer
+                      <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+
+        {offers.length === 0 && (
+          <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-100">
+            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Gift className="w-10 h-10 text-gray-300" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900">No active offers</h3>
+            <p className="text-gray-500">Check back later for exciting new deals!</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

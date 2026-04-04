@@ -1,0 +1,85 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: menuItems
+    // Fields:
+    //   - name: string (required)
+    //   - description: string
+    //   - price: number (required)
+    //   - category: string (required)
+    //   - imageUrl: string
+    //   - isSpeciality: bool
+    //   - createdAt: timestamp
+    //
+    // Collection: offers
+    // Fields:
+    //   - title: string (required)
+    //   - description: string
+    //   - discount: string (required)
+    //   - imageUrl: string
+    //   - isActive: bool
+    //   - createdAt: timestamp
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "microflicker@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidMenuItem(data) {
+      return data.keys().hasAll(['name', 'price', 'category']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.price is number && data.price >= 0 &&
+             data.category is string && data.category.size() > 0 && data.category.size() < 50 &&
+             (!('description' in data) || (data.description is string && data.description.size() < 500)) &&
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() < 1000)) &&
+             (!('isSpeciality' in data) || data.isSpeciality is bool);
+    }
+
+    function isValidOffer(data) {
+      return data.keys().hasAll(['title', 'discount']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 100 &&
+             data.discount is string && data.discount.size() > 0 && data.discount.size() < 50 &&
+             (!('description' in data) || (data.description is string && data.description.size() < 500)) &&
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() < 1000)) &&
+             (!('isActive' in data) || data.isActive is bool);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /menuItems/{itemId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidMenuItem(request.resource.data);
+      allow update: if isAdmin() && isValidMenuItem(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /offers/{offerId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidOffer(request.resource.data);
+      allow update: if isAdmin() && isValidOffer(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
+  }
+}

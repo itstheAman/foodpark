@@ -1,0 +1,43 @@
+{
+  "entities": {
+    "MenuItem": {
+      "title": "Menu Item",
+      "description": "A food or beverage item on the menu.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Name of the item" },
+        "description": { "type": "string", "description": "Description of the item" },
+        "price": { "type": "number", "description": "Price of the item" },
+        "category": { "type": "string", "description": "Category (e.g., Food, Juice, Special)" },
+        "imageUrl": { "type": "string", "description": "URL to the item image" },
+        "isSpeciality": { "type": "boolean", "description": "Whether this item is a speciality" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "price", "category"]
+    },
+    "Offer": {
+      "title": "Offer",
+      "description": "A promotional offer or discount.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Title of the offer" },
+        "description": { "type": "string", "description": "Description of the offer" },
+        "discount": { "type": "string", "description": "Discount amount or percentage" },
+        "imageUrl": { "type": "string", "description": "URL to the offer image" },
+        "isActive": { "type": "boolean", "description": "Whether the offer is currently active" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "discount"]
+    }
+  },
+  "firestore": {
+    "/menuItems": {
+      "schema": "MenuItem",
+      "description": "Collection of all menu items."
+    },
+    "/offers": {
+      "schema": "Offer",
+      "description": "Collection of all promotional offers."
+    }
+  }
+}
