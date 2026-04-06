@@ -37,77 +37,79 @@ export default function Login() {
   const isAdmin = user?.email === 'microflicker@gmail.com';
 
   return (
-    <div className="pt-32 pb-20 min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="pt-32 pb-20 min-h-screen flex items-center justify-center bg-earth-50 px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-gray-100 p-8 text-center space-y-8"
+        className="max-w-md w-full bg-white rounded-[3.5rem] shadow-2xl shadow-red-900/5 border border-red-50 p-12 text-center space-y-10"
       >
-        <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
-          <ShieldCheck className="w-10 h-10 text-emerald-600" />
+        <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto shadow-inner">
+          <ShieldCheck className="w-12 h-12 text-brand-red" />
         </div>
 
-        <div className="space-y-2">
-          <h2 className="text-3xl font-bold text-gray-900">
+        <div className="space-y-4">
+          <h2 className="text-4xl font-sans font-black text-red-950 leading-tight">
             {user ? 'Welcome Back!' : 'Admin Access'}
           </h2>
-          <p className="text-gray-500">
+          <p className="text-earth-500 font-medium">
             {user
               ? `Logged in as ${user.displayName}`
-              : 'Please sign in with your Google account to access the admin panel.'}
+              : 'Please sign in with your Google account to access the forest sanctuary admin panel.'}
           </p>
         </div>
 
         {error && (
-          <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100">
+          <div className="p-5 bg-red-50 text-red-600 rounded-2xl text-xs font-black uppercase tracking-widest border border-red-100">
             {error}
           </div>
         )}
 
         {user ? (
-          <div className="space-y-4">
-            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+          <div className="space-y-6">
+            <div className="flex items-center gap-5 p-6 bg-earth-50 rounded-[2rem] border border-red-100 shadow-inner">
               {user.photoURL ? (
-                <img src={user.photoURL} alt="User" className="w-12 h-12 rounded-full border-2 border-white shadow-sm" />
+                <img src={user.photoURL} alt="User" className="w-16 h-16 rounded-full border-4 border-white shadow-md" />
               ) : (
-                <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center text-white">
-                  <UserIcon className="w-6 h-6" />
+                <div className="w-16 h-16 bg-brand-red rounded-full flex items-center justify-center text-white shadow-lg">
+                  <UserIcon className="w-8 h-8" />
                 </div>
               )}
               <div className="text-left">
-                <p className="font-bold text-gray-900">{user.displayName}</p>
-                <p className="text-xs text-gray-500">{user.email}</p>
+                <p className="font-black text-red-950 text-lg leading-none mb-1">{user.displayName}</p>
+                <p className="text-xs font-black uppercase tracking-widest text-red-400">{user.email}</p>
               </div>
             </div>
 
-            {isAdmin && (
-              <button
-                onClick={() => navigate('/admin')}
-                className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
-              >
-                Go to Admin Panel
-              </button>
-            )}
+            <div className="space-y-4">
+              {isAdmin && (
+                <button
+                  onClick={() => navigate('/admin')}
+                  className="w-full py-5 bg-red-700 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-red-800 transition-all shadow-xl shadow-red-900/20"
+                >
+                  Go to Admin Panel
+                </button>
+              )}
 
-            <button
-              onClick={handleLogout}
-              className="w-full py-4 bg-white text-gray-600 border-2 border-gray-100 rounded-2xl font-bold hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
-            >
-              <LogOut className="w-5 h-5" />
-              Sign Out
-            </button>
+              <button
+                onClick={handleLogout}
+                className="w-full py-5 bg-white text-earth-600 border-2 border-red-100 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-earth-50 transition-all flex items-center justify-center gap-3"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </button>
+            </div>
           </div>
         ) : (
           <button
             onClick={handleLogin}
             disabled={loading}
-            className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-3 disabled:opacity-50"
+            className="w-full py-6 bg-red-700 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-red-800 transition-all shadow-xl shadow-red-900/20 flex items-center justify-center gap-4 disabled:opacity-50"
           >
             {loading ? (
-              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
-                <LogIn className="w-6 h-6" />
+                <LogIn className="w-5 h-5" />
                 Sign in with Google
               </>
             )}

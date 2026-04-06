@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
-import { Utensils, GlassWater, Cookie, Star, Search, Filter } from 'lucide-react';
+import { Utensils, Star, Search, Filter, ShoppingBag } from 'lucide-react';
 
 interface MenuItem {
   id: string;
@@ -14,7 +14,7 @@ interface MenuItem {
   isSpeciality: boolean;
 }
 
-export default function Menu() {
+export default function Menu({ isHomepage = false }: { isHomepage?: boolean }) {
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
@@ -41,39 +41,48 @@ export default function Menu() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+      <div className={`${isHomepage ? 'py-20' : 'min-h-screen'} flex items-center justify-center bg-brand-light`}>
+        <div className="w-12 h-12 border-4 border-brand-red border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="pt-32 pb-20 min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-12">
-        <div className="text-center space-y-4">
+    <div className={`${isHomepage ? 'pb-20' : 'pt-32 pb-20 min-h-screen'} bg-brand-light px-4 sm:px-6 lg:px-8`}>
+      <div className="max-w-7xl mx-auto space-y-20">
+        <div className="text-center space-y-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="inline-flex items-center gap-2 px-6 py-2 bg-red-50 text-brand-red rounded-full text-xs font-black uppercase tracking-widest border border-red-100"
+          >
+            <Utensils className="w-4 h-4" />
+            <span>Our Menu</span>
+          </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl lg:text-6xl font-extrabold text-gray-900 tracking-tight"
+            className="text-5xl lg:text-7xl font-sans font-black text-brand-dark tracking-tight"
           >
-            Our Delicious <span className="text-emerald-600 font-black">Menu</span>
+            Discover Our <br />
+            <span className="text-brand-red">Culinary Art</span>
           </motion.h1>
-          <p className="text-gray-500 max-w-2xl mx-auto text-lg leading-relaxed">
-            From farm to table, we serve only the freshest ingredients prepared with passion and precision.
+          <p className="text-gray-500 max-w-2xl mx-auto text-lg font-medium leading-relaxed">
+            Explore our curated selection of dishes, crafted with the freshest ingredients and a touch of passion.
           </p>
         </div>
 
         {/* Filters and Search */}
-        <div className="flex flex-col md:flex-row gap-6 items-center justify-between bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-          <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-8 bg-white p-6 rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-gray-50">
+          <div className="flex flex-wrap justify-center gap-2">
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setFilter(cat)}
-                className={`px-6 py-3 rounded-2xl font-bold transition-all text-sm ${
+                className={`px-8 py-3 rounded-full font-black uppercase tracking-widest text-[10px] transition-all ${
                   filter === cat
-                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100'
-                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                    ? 'bg-brand-red text-white shadow-lg shadow-red-900/20'
+                    : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
                 }`}
               >
                 {cat}
@@ -81,82 +90,99 @@ export default function Menu() {
             ))}
           </div>
 
-          <div className="relative w-full md:w-80">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <div className="relative w-full max-w-md">
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
             <input
               type="text"
               placeholder="Search dishes..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+              className="w-full pl-14 pr-6 py-4 bg-gray-50 border border-gray-100 rounded-full focus:ring-2 focus:ring-brand-red outline-none transition-all font-medium text-brand-dark text-sm"
             />
           </div>
         </div>
 
-        {/* Menu Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {/* Menu Grid - Pinned Cards Presentation */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-12 pt-10">
           <AnimatePresence mode="popLayout">
-            {filteredItems.map((item) => (
-              <motion.div
-                key={item.id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 group"
-              >
-                <div className="relative h-56 overflow-hidden">
-                  {item.imageUrl ? (
-                    <img
-                      src={item.imageUrl}
-                      alt={item.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-emerald-50 flex items-center justify-center">
-                      <Utensils className="w-12 h-12 text-emerald-200" />
-                    </div>
-                  )}
-                  <div className="absolute top-4 left-4 flex gap-2">
-                    <span className="px-3 py-1 bg-white/90 backdrop-blur-md text-emerald-700 rounded-full text-xs font-bold shadow-sm uppercase tracking-wider">
-                      {item.category}
-                    </span>
-                    {item.isSpeciality && (
-                      <span className="px-3 py-1 bg-amber-400 text-white rounded-full text-xs font-bold shadow-sm flex items-center gap-1">
-                        <Star className="w-3 h-3 fill-white" />
-                        Special
-                      </span>
-                    )}
-                  </div>
-                </div>
+            {filteredItems.map((item, index) => {
+              // Deterministic rotation based on index to look organic
+              const rotation = index % 2 === 0 ? (index % 3 === 0 ? 2 : -2) : (index % 5 === 0 ? -3 : 3);
+              
+              // Pin colors
+              const pinColors = ['bg-pink-600', 'bg-purple-600', 'bg-red-600', 'bg-rose-500'];
+              const pinColor = pinColors[index % pinColors.length];
 
-                <div className="p-6 space-y-4">
-                  <div className="flex justify-between items-start gap-4">
-                    <h3 className="text-xl font-bold text-gray-900 leading-tight group-hover:text-emerald-600 transition-colors">
-                      {item.name}
-                    </h3>
-                    <span className="text-xl font-black text-emerald-600">${item.price.toFixed(2)}</span>
+              return (
+                <motion.div
+                  key={item.id}
+                  layout
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0, rotate: rotation }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  whileHover={{ scale: 1.05, rotate: 0, zIndex: 10 }}
+                  className="relative group cursor-pointer"
+                >
+                  {/* The Card */}
+                  <div 
+                    className="bg-[#fdfcfb] rounded-sm p-3 pb-6 text-center shadow-[2px_4px_12px_rgba(0,0,0,0.15)] border border-gray-200/60 flex flex-col h-full relative"
+                    style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/cream-paper.png')" }}
+                  >
+                    
+                    {/* The Pin */}
+                    <div className={`absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full ${pinColor} shadow-[0_2px_4px_rgba(0,0,0,0.4)] border border-black/10 z-10`} />
+
+                    {/* Image Area */}
+                    <div className="w-full aspect-square bg-white shadow-sm overflow-hidden mb-4 relative rounded-sm">
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-50 flex items-center justify-center">
+                          <Utensils className="w-10 h-10 text-gray-200" />
+                        </div>
+                      )}
+                      
+                      {item.isSpeciality && (
+                        <div className="absolute top-2 right-2 p-1.5 bg-amber-400 text-white rounded-full shadow-sm">
+                          <Star className="w-3 h-3 fill-white" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Text Area */}
+                    <div className="space-y-1 flex-1 flex flex-col items-center justify-center">
+                      <h3 className="text-lg font-sans text-gray-800 leading-tight">
+                        {item.name}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-2">
+                        <p className="text-brand-red font-bold text-sm">
+                          ${item.price.toFixed(2)}
+                        </p>
+                        <span className="text-gray-300">•</span>
+                        <p className="text-gray-400 text-[10px] uppercase tracking-wider">
+                          {item.category}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-gray-500 text-sm line-clamp-2 leading-relaxed">
-                    {item.description || 'No description available for this delicious item.'}
-                  </p>
-                  <button className="w-full py-3 bg-gray-50 text-emerald-600 rounded-xl font-bold hover:bg-emerald-600 hover:text-white transition-all border border-emerald-100">
-                    Order Now
-                  </button>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
         </div>
 
         {filteredItems.length === 0 && (
           <div className="text-center py-20">
             <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Filter className="w-10 h-10 text-gray-300" />
+              <Filter className="w-10 h-10 text-gray-200" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900">No items found</h3>
-            <p className="text-gray-500">Try adjusting your filters or search terms.</p>
+            <h3 className="text-2xl font-black text-brand-dark">No dishes found</h3>
+            <p className="text-gray-500 font-medium">Try adjusting your filters or search terms.</p>
           </div>
         )}
       </div>
